@@ -35,19 +35,12 @@ public class Huffman {
         String filename = "enwik8";
         String absolutePath = directory + File.separator + filename;
         String str = "";
-        //System.out.println("test");
         StringBuilder sb = new StringBuilder();
-
         try ( BufferedReader fileReader = new BufferedReader(new FileReader(absolutePath), 16384)) {
             String line = fileReader.readLine();
-            int j = 0;
             while (line != null) {
                 sb.append(line).append(System.getProperty("line.separator"));
                 line = fileReader.readLine();
-                if (j % 100000 == 0) {
-                    System.out.println(j);
-                }
-                j++;
             }
             fileReader.close();
         } catch (FileNotFoundException e) {
@@ -55,13 +48,9 @@ public class Huffman {
         } catch (IOException e) {
 
         }
-
         str = sb.toString();
         Map<Character, Integer> x = heap(str);
-        //ArrayList<charFrequency> x = getCharFreq(directory,filename);
-
         compressFile(filename, directory, outputfile, x, str);
-
         decompressFile(outputfile, x, directory, "decompressed.txt");
 
     }
@@ -196,7 +185,6 @@ public class Huffman {
         for (int j = 0; j < s.length(); j++) {
             sb.append(getCode(s.charAt(j), c));
         }
-        System.out.println("test");
         out = sb.toString();
         return out;
     }
@@ -210,8 +198,8 @@ public class Huffman {
         Map<Character, String> key = keyCodes(HuffmanTree(x));
 
         try ( OutputStream outputStream = new FileOutputStream(directory + File.separator + outputfile)) {
-            outputStream.write(stringToBytes(encode(str, key)));
-
+            BufferedOutputStream bos = new BufferedOutputStream(outputStream, 16384);
+            bos.write(stringToBytes(encode(str, key)));
         } catch (IOException e) {
 
         }
@@ -231,10 +219,10 @@ public class Huffman {
             bytes[i] = (byte) Integer.parseInt(subByte, 2);
         }
         return bytes;
+
     }
 
     public static void decompressFile(String compFile, Map<Character, Integer> charFreq, String directory, String outputfile) throws FileNotFoundException {
-
         String absolutePath = directory + File.separator + compFile;
         String str = "";
         File file = new File(absolutePath);
@@ -260,15 +248,16 @@ public class Huffman {
         } catch (IOException e) {
 
         }
-
     }
 
     public static String decode(byte[] bytes, Node tree) {
         String str = "";
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < bytes.length; i++) {
-            str += String.format("%8s", Integer.toBinaryString(bytes[i] & 0xFF)).replace(' ', '0');
+            sb.append(String.format("%8s", Integer.toBinaryString(bytes[i] & 0xFF)).replace(' ', '0'));
         }
-        String out = "";
+        str = sb.toString();
+        StringBuilder sb2 = new StringBuilder();
         Node curr = tree;
         for (int j = 0; j < str.length(); j++) {
             if (str.charAt(j) == '0') {
@@ -279,11 +268,10 @@ public class Huffman {
                 }
             }
             if (curr.ch != '\u0000') {
-                out += curr.ch;
+                sb2.append(curr.ch);
                 curr = tree;
             }
         }
-
-        return out;
+        return sb2.toString();
     }
 }
